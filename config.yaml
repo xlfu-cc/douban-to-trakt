@@ -1,0 +1,9 @@
+douban:
+  user_id: 0
+  cookies: ''
+  sleep_interval: 2
+trakt:
+  client_id: ''
+  client_secret: ''
+  redirect_uri: ''
+  clear_records: false
