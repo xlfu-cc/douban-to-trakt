@@ -79,7 +79,7 @@ def scrape_page(user_id, collect_type, start, result):
 
             if not item.get("imdb_id"):
                 item["imdb_id"] = get_imdb_id(link, title)
-            logger.debug(f'    Get item "{title}" with idmb: "{item["imdb_id"]}"')
+            logger.debug(f'    Get item "{title}" with imdb: "{item["imdb_id"]}"')
     else:
         logger.error("  Scrape with start={} failed, response: {}".format(start, r))
 
@@ -139,6 +139,14 @@ def scrape(user_id, name, file_name):
                 scrape_page(user_id, collect_type, page * 15, data_map)
             except Exception as e:
                 logger.error("Error occurred when scraping with error {}".format(e))
+            write_to_csv(
+                file_name,
+                sorted(
+                    data_map.values(),
+                    key=lambda x: (1 if "imdb_id" in x and x["imdb_id"] else 0, x["type"], x["date"], x["douban_id"]),
+                    reverse=True,
+                ),
+            )
 
         typed = list(filter(lambda x: x["type"] == collect_type, data_map.values()))
         logger.info(
@@ -161,12 +169,6 @@ def scrape(user_id, name, file_name):
             actual=len(data_map.values()),
             expect=total_count,
         )
-    )
-
-    return sorted(
-        data_map.values(),
-        key=lambda x: (1 if x["imdb_id"] else 0, x["type"], x["date"], x["douban_id"]),
-        reverse=True,
     )
 
 
@@ -225,8 +227,7 @@ def main():
     name = check_user_exist(user_id)
 
     file_name = WorkingDir.get_output("douban.csv")
-    result = scrape(user_id, name, file_name)
-    write_to_csv(file_name, result)
+    scrape(user_id, name, file_name)
 
 
 if __name__ == "__main__":
