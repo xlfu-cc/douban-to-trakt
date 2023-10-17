@@ -1,6 +1,6 @@
 # douban-to-trakt
 
-本脚本用于将douban上的“看过”，“相看”记录导入至trakt上。
+本脚本用于将douban上的“看过”，“想看”记录导入至trakt上。
 步骤分两步
 
 1. 从douban上导出至csv文件。
