@@ -55,31 +55,34 @@ def scrape_page(user_id, collect_type, start, result):
     if dom_items and len(dom_items) > 0:
         logger.debug(f"    Get {len(dom_items)} items")
         for dom_item in dom_items:
-            link = dom_item.a["href"]
-            douban_id = link.split("/")[-2]
+            try:
+                link = dom_item.a["href"]
+                douban_id = link.split("/")[-2]
 
-            item = result.get(douban_id)
-            if not item:
-                item = {"douban_id": douban_id}
-                result[douban_id] = item
+                item = result.get(douban_id)
+                if not item:
+                    item = {"douban_id": douban_id}
+                    result[douban_id] = item
 
-            item["type"] = collect_type
+                item["type"] = collect_type
 
-            title = dom_item.find("li", {"class": "title"}).em.text
-            item["title"] = title
+                title = dom_item.find("li", {"class": "title"}).em.text
+                item["title"] = title
 
-            rating = dom_item.find("span", {"class": "date"}).find_previous_siblings()
-            item["rating"] = int(rating[0]["class"][0][6]) if len(rating) > 0 else None
+                rating = dom_item.find("span", {"class": "date"}).find_previous_siblings()
+                item["rating"] = int(rating[0]["class"][0][6]) if len(rating) > 0 else None
 
-            comment = dom_item.find("span", {"class": "comment"})
-            item["comment"] = comment.contents[0].strip() if comment else None
+                comment = dom_item.find("span", {"class": "comment"})
+                item["comment"] = comment.contents[0].strip() if comment else None
 
-            date = dom_item.find("span", {"class": "date"})
-            item["date"] = date.contents[0].strip() if date else None
+                date = dom_item.find("span", {"class": "date"})
+                item["date"] = date.contents[0].strip() if date else None
 
-            if not item.get("imdb_id"):
-                item["imdb_id"] = get_imdb_id(link, title)
-            logger.debug(f'    Get item "{title}" with imdb: "{item["imdb_id"]}"')
+                if not item.get("imdb_id"):
+                    item["imdb_id"] = get_imdb_id(link, title)
+                logger.debug(f'    Get item "{title}" with imdb: "{item["imdb_id"]}"')
+            except Exception as e:
+                logger.error(f'    Error occurred when scraping for "{title}", {link}, e: {e}')
     else:
         logger.error("  Scrape with start={} failed, response: {}".format(start, r))
 
@@ -143,7 +146,12 @@ def scrape(user_id, name, file_name):
                 file_name,
                 sorted(
                     data_map.values(),
-                    key=lambda x: (1 if "imdb_id" in x and x["imdb_id"] else 0, x["type"], x["date"], x["douban_id"]),
+                    key=lambda x: (
+                        1 if "imdb_id" in x and x["imdb_id"] else 0,
+                        x["type"],
+                        x["date"] if "date" in x else "",
+                        x["douban_id"],
+                    ),
                     reverse=True,
                 ),
             )
